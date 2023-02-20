@@ -1,91 +1,56 @@
-import Image from 'next/image'
-import { Inter } from '@next/font/google'
-import styles from './page.module.css'
+import NextRecipeButton from "@/components/button/NextRecipeButton"
+import axios from "axios"
+import {} from "next/navigation"
 
-const inter = Inter({ subsets: ['latin'] })
+export const revalidate = 0
 
-export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+export default async function Home() {
+	const { data } = await axios.get(
+		"https://www.themealdb.com/api/json/v1/1/random.php"
+	)
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-        <div className={styles.thirteen}>
-          <Image src="/thirteen.svg" alt="13" width={40} height={31} priority />
-        </div>
-      </div>
+	const meal = data.meals[0]
 
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+	const ingredients = []
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>Explore the Next.js 13 playground.</p>
-        </a>
+	for (let index = 1; index <= 20; index++) {
+		const ingredient = meal[`strIngredient${index}`]
+		const measure = meal[`strMeasure${index}`]
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+		if (!ingredient || !measure) continue
+
+		ingredients.push({
+			name: ingredient,
+			measure,
+		})
+	}
+
+	return (
+		<div className="min-h-screen w-full flex flex-col md:flex-row">
+			<div
+				className="w-full aspect-square max-h-[30rem] bg-no-repeat [background-position-x:center] bg-contain bg-fixed md:w-3/5 md:bg-cover md:bg-center md:max-h-none md:aspect-auto"
+				style={{ backgroundImage: `url('${meal.strMealThumb}')` }}
+			></div>
+			<div className="p-6 w-full flex flex-col bg-white -my-2 rounded-t-lg md:my-0 md:w-2/5">
+				<h1 className="font-serif text-3xl mb-1">{meal.strMeal}</h1>
+				<p className="uppercase text-gray-500 mb-6">
+					{meal.strCategory} | {meal.strArea}
+				</p>
+
+				<h2 className="font-serif text-2xl mb-2">Ingredients</h2>
+				<ul className="mb-6">
+					{ingredients.map(({ name, measure }, index) => (
+						<li key={index}>
+							{name} - {measure}
+						</li>
+					))}
+				</ul>
+
+				<h2 className="font-serif text-2xl mb-2">Instructions</h2>
+				<p className="text-justify">{meal.strInstructions}</p>
+
+				<NextRecipeButton />
+			</div>
+		</div>
+	)
 }
